@@ -1,0 +1,1 @@
+$HOME/.claude/plugins/cache/cognee/cognee-memory/0.2.0/scripts/cognee-statusline.sh

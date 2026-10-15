@@ -1,0 +1,17 @@
+{
+  "name": "personal-plugins",
+  "owner": { "name": "james" },
+  "description": "Personal Claude Code plugins: context status line and inbound-content guardrail.",
+  "plugins": [
+    {
+      "name": "context-status",
+      "source": "./context-status",
+      "description": "Status line showing model, directory, git branch and context window usage."
+    },
+    {
+      "name": "jev-guard",
+      "source": "./jev-guard",
+      "description": "Inbound-content guardrail: scans web, MCP and network Bash results for prompt injection with TypeSafe Jev."
+    }
+  ]
+}

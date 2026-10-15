@@ -1,0 +1,6 @@
+{
+  "name": "jev-guard",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Inbound-content guardrail: scans WebFetch, WebSearch, MCP and network Bash (curl/wget) results for prompt injection with TypeSafe Jev before the model reads them."
+}

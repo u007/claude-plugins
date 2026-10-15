@@ -1,0 +1,7 @@
+{
+  "name": "context-status",
+  "displayName": "Context Status",
+  "version": "1.1.0",
+  "description": "Shows the active model, project directory, git branch and context window usage (tokens/percent) in the Claude Code status line.",
+  "author": { "name": "james" }
+}

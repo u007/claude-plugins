@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^(WebFetch|WebSearch|Bash|mcp__.*)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/content_guard.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
