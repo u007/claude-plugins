@@ -11,10 +11,24 @@ Personal Claude Code plugin marketplace (`personal-plugins`).
 
 ### 1. Add the marketplace
 
-From GitHub:
+From GitHub, in a terminal:
+
+```sh
+claude plugin marketplace add https://github.com/u007/claude-plugins
+# or the short form:
+claude plugin marketplace add u007/claude-plugins
+```
+
+Or inside a Claude Code session:
 
 ```
 /plugin marketplace add u007/claude-plugins
+```
+
+Check it was added:
+
+```sh
+claude plugin marketplace list
 ```
 
 Or from a local clone:
