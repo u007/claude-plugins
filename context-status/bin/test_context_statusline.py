@@ -9,7 +9,9 @@ string on stdout) and asserts the rendered status line.
 No third-party dependencies; run it from anywhere.
 """
 
+import contextlib
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -17,6 +19,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _HERE = Path(__file__).resolve().parent
 _RENDERER = _HERE / "context_statusline_render.py"
@@ -25,11 +28,15 @@ _RENDERER = _HERE / "context_statusline_render.py"
 def render(payload, raw=None):
     """Pipe `payload` (dict or pre-serialized str) into the renderer."""
     stdin = raw if raw is not None else json.dumps(payload)
+    # New session = no controlling tty, so the renderer's /dev/tty width probe
+    # yields None and the line is never truncated, whatever terminal the suite
+    # is run from.
     result = subprocess.run(
         [sys.executable, str(_RENDERER)],
         input=stdin.encode("utf-8"),
         capture_output=True,
         timeout=30,
+        start_new_session=True,
     )
     # The renderer must never fail the status line: a nonzero exit leaves a
     # blank/garbled line in the user's terminal.
@@ -378,6 +385,127 @@ class Robustness(unittest.TestCase):
                 path.unlink()
             else:
                 path.write_text(original, encoding="utf-8")
+
+
+def render_in_process(renderer, payload_dict, width, prev=""):
+    """Run the renderer's main() with a fixed terminal width and prev output."""
+    stdin = io.TextIOWrapper(io.BytesIO(json.dumps(payload_dict).encode("utf-8")))
+    out = io.StringIO()
+    with mock.patch.object(renderer, "_terminal_width", return_value=width), \
+            mock.patch.object(renderer, "_prev_segment", return_value=prev), \
+            mock.patch.object(sys, "stdin", stdin), \
+            contextlib.redirect_stdout(out):
+        renderer.main()
+    return out.getvalue().strip()
+
+
+class TerminalWidth(unittest.TestCase):
+    def setUp(self):
+        self.renderer = load_renderer()
+
+    def test_reads_width_from_dev_tty(self):
+        size = os.terminal_size((120, 40))
+        with mock.patch.object(os, "open", return_value=99) as opened, \
+                mock.patch.object(os, "get_terminal_size", return_value=size) as query, \
+                mock.patch.object(os, "close") as closed:
+            self.assertEqual(self.renderer._terminal_width(), 120)
+        opened.assert_called_once_with("/dev/tty", os.O_RDONLY)
+        query.assert_called_once_with(99)
+        closed.assert_called_once_with(99)
+
+    def test_none_and_logged_when_dev_tty_cannot_be_opened(self):
+        err = io.StringIO()
+        with mock.patch.object(os, "open", side_effect=OSError(6, "Device not configured")), \
+                contextlib.redirect_stderr(err):
+            self.assertIsNone(self.renderer._terminal_width())
+        self.assertIn("/dev/tty", err.getvalue())
+        self.assertIn("Device not configured", err.getvalue())
+
+    def test_none_and_logged_when_size_query_fails(self):
+        err = io.StringIO()
+        with mock.patch.object(os, "open", return_value=99), \
+                mock.patch.object(
+                    os, "get_terminal_size",
+                    side_effect=OSError(25, "Inappropriate ioctl for device"),
+                ), \
+                mock.patch.object(os, "close") as closed, \
+                contextlib.redirect_stderr(err):
+            self.assertIsNone(self.renderer._terminal_width())
+        closed.assert_called_once_with(99)
+        self.assertIn("Inappropriate ioctl", err.getvalue())
+
+
+class VisibleWidth(unittest.TestCase):
+    def setUp(self):
+        self.renderer = load_renderer()
+
+    def test_colour_codes_are_not_counted(self):
+        self.assertEqual(self.renderer._visible_width("\x1b[1;31mabc\x1b[0m"), 3)
+
+    def test_osc_hyperlink_is_not_counted(self):
+        link = "\x1b]8;;https://example.com\x07link\x1b]8;;\x07"
+        self.assertEqual(self.renderer._visible_width(link), 4)
+
+    def test_longest_line_wins_for_multi_line_text(self):
+        self.assertEqual(self.renderer._visible_width("ab\nabcd\nx"), 4)
+
+
+class Truncation(unittest.TestCase):
+    def setUp(self):
+        self.renderer = load_renderer()
+        self.repo = GitRepo(branch="main")
+        self.payload = payload(workspace={"current_dir": self.repo.path})
+        # Full line with no truncation, split into its segments:
+        # model, dir, branch, context.
+        self.full = render_in_process(self.renderer, self.payload, width=None)
+        self.parts = self.full.split(" · ")
+        self.assertEqual(len(self.parts), 4)
+        self.model, self.dir, self.branch, self.ctx = self.parts
+
+    def test_unknown_width_never_truncates(self):
+        out = render_in_process(
+            self.renderer, self.payload, width=None, prev="x" * 300
+        )
+        self.assertIn("x" * 300, out)
+        self.assertIn(self.branch, out)
+
+    def test_full_line_kept_when_it_exactly_fits(self):
+        out = render_in_process(self.renderer, self.payload, width=len(self.full))
+        self.assertEqual(out, self.full)
+
+    def test_branch_dropped_first(self):
+        out = render_in_process(self.renderer, self.payload, width=len(self.full) - 1)
+        self.assertEqual(out, " · ".join([self.model, self.dir, self.ctx]))
+
+    def test_dir_dropped_after_branch(self):
+        width = len(" · ".join([self.model, self.dir, self.ctx])) - 1
+        out = render_in_process(self.renderer, self.payload, width=width)
+        self.assertEqual(out, " · ".join([self.model, self.ctx]))
+
+    def test_model_dropped_last_and_context_kept(self):
+        width = len(" · ".join([self.model, self.ctx])) - 1
+        out = render_in_process(self.renderer, self.payload, width=width)
+        self.assertEqual(out, self.ctx)
+
+    def test_context_kept_when_nothing_else_fits(self):
+        out = render_in_process(self.renderer, self.payload, width=1)
+        self.assertEqual(out, self.ctx)
+
+    def test_prev_dropped_before_branch(self):
+        prev = "zz-prev"
+        with_prev = " · ".join(self.parts + [prev])
+        out = render_in_process(
+            self.renderer, self.payload, width=len(with_prev) - 1, prev=prev
+        )
+        self.assertEqual(out, self.full)
+
+    def test_prev_measured_without_its_escape_codes(self):
+        prev = "\x1b[32mzz-prev\x1b[0m"
+        visible = " · ".join(self.parts + ["zz-prev"])
+        out = render_in_process(
+            self.renderer, self.payload, width=len(visible), prev=prev
+        )
+        self.assertEqual(out, " · ".join(self.parts + [prev]))
 
 
 if __name__ == "__main__":

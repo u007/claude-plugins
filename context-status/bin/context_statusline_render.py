@@ -209,6 +209,51 @@ def _prev_segment(raw_stdin):
     return result.stdout.decode("utf-8", errors="replace").strip()
 
 
+_ANSI_ESCAPE = re.compile(
+    r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)"
+)
+
+
+def _terminal_width():
+    """The width of the controlling terminal, or None if it can't be read.
+
+    The renderer's stdout is a pipe, so `shutil.get_terminal_size()` cannot see
+    the terminal and always reports 80. Query /dev/tty directly. When it can't
+    be opened or queried, log why to stderr and return None, which skips
+    truncation entirely.
+    """
+    try:
+        fd = os.open("/dev/tty", os.O_RDONLY)
+    except OSError as exc:
+        print(
+            f"context-statusline: could not open /dev/tty for terminal width: {exc}",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        columns = os.get_terminal_size(fd).columns
+    except OSError as exc:
+        print(
+            f"context-statusline: could not read terminal size from /dev/tty: {exc}",
+            file=sys.stderr,
+        )
+        return None
+    finally:
+        os.close(fd)
+    if columns <= 0:
+        print(
+            f"context-statusline: /dev/tty reported {columns} columns",
+            file=sys.stderr,
+        )
+        return None
+    return columns
+
+
+def _visible_width(text):
+    """Columns `text` occupies: escape sequences stripped, longest line wins."""
+    return max(len(_ANSI_ESCAPE.sub("", line)) for line in text.split("\n"))
+
+
 def main():
     raw_stdin = sys.stdin.buffer.read()
     try:
@@ -222,18 +267,41 @@ def main():
         # carries none of the fields we read, so treat it as empty.
         data = {}
 
-    segments = [
-        _model_segment(data),
-        _dir_segment(data),
-        _branch_segment(data),
-        _context_segment(data),
+    # Build the (name, text) pairs in display order. Context is never dropped.
+    # It sits after model/dir/branch and before prev, so dropping prev does not
+    # bring context into view; only dropping model/dir/branch moves it left.
+    named = [
+        ("model", _model_segment(data)),
+        ("dir", _dir_segment(data)),
+        ("branch", _branch_segment(data)),
+        ("context", _context_segment(data)),
     ]
 
     prev = _prev_segment(raw_stdin)
     if prev:
-        segments.append(prev)
+        named.append(("prev", prev))
 
-    print(" · ".join(segment for segment in segments if segment))
+    def _build(items):
+        return " · ".join(text for _, text in items if text)
+
+    drop_order = ("prev", "branch", "dir", "model")
+    width = _terminal_width()
+    remaining = list(named)
+    line = _build(remaining)
+    if width is None or _visible_width(line) <= width:
+        print(line)
+        return
+
+    for name in drop_order:
+        remaining = [item for item in remaining if item[0] != name]
+        line = _build(remaining)
+        if _visible_width(line) <= width:
+            print(line)
+            return
+
+    # Only context is left. Print it even if it alone exceeds the width rather
+    # than printing an empty line.
+    print(_build(remaining))
 
 
 if __name__ == "__main__":
