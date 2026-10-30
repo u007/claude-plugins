@@ -1,0 +1,6 @@
+{
+  "name": "branch-indicator",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Shows which git worktree (or, outside a linked worktree, which branch) the session is working in. Announced at session start and whenever it changes, to both the user and Claude."
+}

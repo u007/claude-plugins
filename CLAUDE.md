@@ -4,13 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code plugin marketplace (`personal-plugins`) holding two plugins. The marketplace manifest is `.claude-plugin/marketplace.json`; each plugin has its own `.claude-plugin/plugin.json`. Plugin `source` paths in the marketplace are relative (`./context-status`, `./jev-guard`).
+A Claude Code plugin marketplace (`personal-plugins`) holding four plugins (`context-status`, `jev-guard`, `okf`, `branch-indicator`). The marketplace manifest is `.claude-plugin/marketplace.json`; each plugin has its own `.claude-plugin/plugin.json`. Plugin `source` paths in the marketplace are relative (`./context-status`, `./jev-guard`).
 
 ## Commands
 
 ```sh
 # Status line tests (stdlib unittest, no install step)
 python3 context-status/bin/test_context_statusline.py
+
+# branch-indicator tests
+python3 branch-indicator/scripts/test_branch_indicator.py
 
 # Single test: ClassName.method_name
 python3 context-status/bin/test_context_statusline.py ModelSegment.test_shows_model_display_name
@@ -44,6 +47,12 @@ Delete any `__pycache__` the test run leaves behind. It is gitignored, but do no
   - **Unvetted** (no `TYPESAFE_API_KEY`, judge error or timeout, or confidence below 0.6 on a clean verdict): the result is delivered, and the model is told it is unvetted. Failures are never silent.
   - **Clean:** no output.
 - `TYPESAFE_API_KEY` is read from the environment only. `.env.example` holds a placeholder. Never add a real key to the repo.
+
+### branch-indicator: worktree/branch announcer
+
+- `hooks/hooks.json` runs `scripts/branch_indicator.py` on SessionStart and on PostToolUse for `Bash|EnterWorktree|ExitWorktree`. It reads `cwd` from the hook input, resolves the git dir and reads `HEAD` directly (no `git` spawn). A linked worktree is a git dir under `.git/worktrees/<name>`.
+- Output is `systemMessage` (shown to the user) plus `additionalContext` (for Claude). PostToolUse is silent unless the location changed since the last announcement, tracked per session in a temp file.
+- The git-dir/HEAD parsing duplicates `context-status`; plugins install independently so they cannot share code. Keep the two in step.
 
 ## Conventions specific to this repo
 

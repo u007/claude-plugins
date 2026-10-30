@@ -1,17 +1,31 @@
 {
   "name": "personal-plugins",
   "owner": { "name": "james" },
-  "description": "Personal Claude Code plugins: context status line and inbound-content guardrail.",
+  "description": "Personal Claude Code plugins: context status line, inbound-content guardrail, OKF knowledge bundle workflow.",
   "plugins": [
     {
       "name": "context-status",
       "source": "./context-status",
+      "version": "1.2.0",
       "description": "Status line showing model, directory, git branch and context window usage."
     },
     {
       "name": "jev-guard",
       "source": "./jev-guard",
+      "version": "0.1.0",
       "description": "Inbound-content guardrail: scans web, MCP and network Bash results for prompt injection with TypeSafe Jev."
+    },
+    {
+      "name": "okf",
+      "source": "./okf",
+      "version": "0.1.0",
+      "description": "OKF knowledge bundle workflow: look up docs before work, update after, dedupe, keep index and log in sync. SessionStart reminder when a bundle exists."
+    },
+    {
+      "name": "branch-indicator",
+      "source": "./branch-indicator",
+      "version": "0.1.0",
+      "description": "Shows which git worktree (or branch) the session is working in, at session start and whenever it changes."
     }
   ]
 }
