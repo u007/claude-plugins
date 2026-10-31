@@ -21,7 +21,8 @@ python3 context-status/bin/test_context_statusline.py ModelSegment.test_shows_mo
 # Validate marketplace + every plugin manifest (exit 1 on errors; add --strict for CI)
 claude plugin validate .
 
-# jev-guard has no test suite; at minimum check it compiles
+# jev-guard tests (judge is stubbed, no network)
+python3 jev-guard/scripts/test_content_guard.py
 python3 -m py_compile jev-guard/scripts/content_guard.py
 ```
 
@@ -41,10 +42,12 @@ Delete any `__pycache__` the test run leaves behind. It is gitignored, but do no
 
 - `hooks/hooks.json` registers one PostToolUse hook, matching `WebFetch|WebSearch|Bash|mcp__.*`, that runs `scripts/content_guard.py`.
 - `source_for()` decides what gets scanned. Bash is scanned only when the command invokes a network binary (`curl`, `wget`, `nc`, ...) against a non-loopback host. Local Bash and Read output is never scanned.
-- The result text is split into 6000-char chunks (max 32, larger results are flagged as unscannable), and the chunks are judged in parallel against the TypeSafe Jev API.
+- The result text is split into 6000-char chunks (first 32 scanned; a larger result is truncated to the scanned prefix), and the chunks are judged in parallel against the TypeSafe Jev API.
 - Three outcomes:
-  - **Flagged:** `decision: block` plus `updatedToolOutput` with the same response shape and a withheld notice.
-  - **Unvetted** (no `TYPESAFE_API_KEY`, judge error or timeout, or confidence below 0.6 on a clean verdict): the result is delivered, and the model is told it is unvetted. Failures are never silent.
+  - **Redirect:** WebFetch's own 3xx `REDIRECT DETECTED` notice is skipped (the judge flags its "use WebFetch again" wording as tool coercion); the model is told it is unverified.
+  - **Truncated:** more than 32 chunks; only the scanned prefix is delivered, with a note.
+  - **Flagged** (also a clean verdict below 0.6 confidence, with a distinct notice): `decision: block` plus `updatedToolOutput` with the same response shape and a withheld notice.
+  - **Unvetted** (no `TYPESAFE_API_KEY`, or judge error or timeout): the result is delivered, and the model is told it is unvetted. Failures are never silent.
   - **Clean:** no output.
 - `TYPESAFE_API_KEY` is read from the environment only. `.env.example` holds a placeholder. Never add a real key to the repo.
 

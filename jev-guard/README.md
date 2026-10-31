@@ -4,7 +4,10 @@ Claude Code plugin. PostToolUse hook port of ocode's inbound-content guardrail (
 
 - **Scans:** WebFetch, WebSearch, every `mcp__*` tool, and Bash only when it runs a network binary (curl, wget, nc, ncat, http, https, ftp, sftp) against a non-loopback host. Local Bash/Read output is never scanned.
 - **Flagged:** result replaced via `updatedToolOutput` with a withheld notice, plus `decision: block` and `additionalContext` as a backstop. Claude Code hooks cannot ask the user post-tool, so there is no approve dialog (ocode asks; this denies).
-- **Unvetted** (no `TYPESAFE_API_KEY`, judge error/timeout, low-confidence clean < 0.6): result delivered, but the model is told it is unvetted. Over 32 chunks of 6000 chars: flagged.
+- **Unvetted** (no `TYPESAFE_API_KEY`, judge error/timeout): result delivered, but the model is told it is unvetted.
+- **Withheld, not scanned clean:** a clean verdict below 0.6 confidence is withheld like a flag, with a notice that says it could not be confirmed clean.
+- **Oversize** (over 32 chunks of 6000 chars): the first 32 chunks are scanned and only that prefix is delivered, with a truncation note. A flag in the prefix withholds the result.
+- **Redirects:** WebFetch's own `REDIRECT DETECTED` notice (3xx, written by Claude Code) is not scanned; the model is told it is unverified. The follow-up fetch is scanned normally.
 - **Unverified:** the `tool_response` shape for WebFetch/WebSearch/MCP. The replacement mirrors the original's type; check with a real flagged result.
 
 ## Setup
