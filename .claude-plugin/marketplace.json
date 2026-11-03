@@ -18,8 +18,8 @@
     {
       "name": "okf",
       "source": "./okf",
-      "version": "0.1.0",
-      "description": "OKF knowledge bundle workflow: look up docs before work, update after, dedupe, keep index and log in sync. SessionStart reminder when a bundle exists."
+      "version": "0.2.0",
+      "description": "OKF knowledge bundle workflow: look up docs before work, update after, dedupe, keep index and log in sync. Ships read-only context and context-writer agents; SessionStart hook dispatches them when a bundle exists."
     },
     {
       "name": "branch-indicator",

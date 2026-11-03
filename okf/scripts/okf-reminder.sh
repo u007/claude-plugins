@@ -14,4 +14,4 @@ awk '
   /^okf_version:/ { found = 1 }
   END { exit !(closed && found) }
 ' "$index" || exit 0
-echo "OKF knowledge bundle detected at docs/ (docs/index.md has okf_version). Before starting ANY task in this project, invoke the okf skill and run its lookup step in a Haiku subagent (Agent tool, model haiku). After the task, have a Haiku subagent update the bundle per the skill's rules."
+echo "OKF knowledge bundle detected at docs/ (docs/index.md has okf_version). Before starting ANY task in this project, dispatch the okf:context agent (Agent tool, subagent_type okf:context) with the task topic for a lookup digest, and work from that. After a task that produced durable knowledge, dispatch okf:context-writer with a self-contained update brief, then check its work with git diff docs/. Do not edit docs/ yourself. If these agents are unavailable, invoke the okf skill and follow its steps directly."

@@ -1,6 +1,6 @@
 {
   "name": "okf",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": { "name": "james" },
-  "description": "Work with an OKF (Open Knowledge Format) v0.1 knowledge bundle in docs/: look up before work, update after, deduplicate, keep index.md and log.md in sync. A SessionStart hook reminds Claude to use the skill when the project has a bundle."
+  "description": "Work with an OKF (Open Knowledge Format) v0.1 knowledge bundle in docs/: look up before work, update after, deduplicate, keep index.md and log.md in sync. Ships read-only `context` and `context-writer` Haiku agents; a SessionStart hook dispatches them when the project has a bundle."
 }
