@@ -8,6 +8,7 @@ Personal Claude Code plugin marketplace (`personal-plugins`).
 | `jev-guard` | `jev-guard/` | PostToolUse guardrail: scans inbound web/MCP/network results with TypeSafe Jev. |
 | `okf` | `okf/` | OKF knowledge bundle workflow skill plus SessionStart lookup reminder. |
 | `branch-indicator` | `branch-indicator/` | Announces the git worktree (or branch) the session works in, at start and on change. |
+| `communication-style` | `communication-style/` | SessionStart: injects the ASD-STE100 communication standard (ported from ocode). |
 
 ## Installation
 

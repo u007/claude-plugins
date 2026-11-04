@@ -1,7 +1,7 @@
 {
   "name": "personal-plugins",
   "owner": { "name": "james" },
-  "description": "Personal Claude Code plugins: context status line, inbound-content guardrail, OKF knowledge bundle workflow.",
+  "description": "Personal Claude Code plugins: context status line, inbound-content guardrail, OKF knowledge bundle workflow, communication style.",
   "plugins": [
     {
       "name": "context-status",
@@ -26,6 +26,12 @@
       "source": "./branch-indicator",
       "version": "0.1.0",
       "description": "Shows which git worktree (or branch) the session is working in, at session start and whenever it changes."
+    },
+    {
+      "name": "communication-style",
+      "source": "./communication-style",
+      "version": "0.1.0",
+      "description": "Injects the ASD-STE100 based Agent Communication & Style Standard into every session at start."
     }
   ]
 }

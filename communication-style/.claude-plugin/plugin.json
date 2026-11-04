@@ -1,0 +1,6 @@
+{
+  "name": "communication-style",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Injects the ASD-STE100 based Agent Communication & Style Standard into every session at start."
+}
