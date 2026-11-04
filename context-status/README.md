@@ -8,6 +8,22 @@ Claude Code status line showing, in order:
 
 e.g. `Opus 5.5 · ocode · main · ctx █░░░░░░░░░ 6% (57.9k/1000.0k) · ● cognee: agent_sessions · local`
 
+## Setup
+
+Automatic. Claude Code plugins cannot declare `statusLine` (it is read only
+from settings), so a SessionStart hook (`scripts/ensure_statusline.py`) writes
+it into `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`):
+
+- no `statusLine` set: it is set to this install's `bin/context-statusline.sh`
+- `statusLine` already runs context-status from another path (an older
+  version): repointed at this install
+- any other `statusLine`: left untouched, logged to stderr
+
+Restart Claude Code once after the first session to see the line. After a
+plugin update the path changes; the next session start repoints it, and the
+line shows again after one more restart. Invalid JSON in settings makes the
+hook fail instead of overwriting the file.
+
 ## Layout
 
 | File | Role |
@@ -15,7 +31,9 @@ e.g. `Opus 5.5 · ocode · main · ctx █░░░░░░░░░ 6% (57.9k/
 | `bin/context-statusline.sh` | Entrypoint registered as `statusLine` in `~/.claude/settings.json`. Just `exec`s the renderer so it inherits stdin. |
 | `bin/context_statusline_render.py` | The renderer. All logic lives here. |
 | `bin/prev_command.txt` | The status line that was configured before this plugin; its output is appended so chaining keeps working. Blank it to disable chaining. |
-| `bin/test_context_statusline.py` | Test suite. |
+| `bin/test_context_statusline.py` | Renderer test suite. |
+| `hooks/hooks.json`, `scripts/ensure_statusline.py` | SessionStart hook that registers the status line. |
+| `scripts/test_ensure_statusline.py` | Hook test suite. |
 
 ## Payload fields consumed
 
@@ -43,6 +61,7 @@ branch still renders its name, matching `git branch --show-current`.
 
 ```sh
 python3 bin/test_context_statusline.py
+python3 scripts/test_ensure_statusline.py
 ```
 
 Standard library only, no dependencies. Pipes payloads through the renderer

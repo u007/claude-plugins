@@ -11,6 +11,7 @@ A Claude Code plugin marketplace (`personal-plugins`) holding five plugins (`con
 ```sh
 # Status line tests (stdlib unittest, no install step)
 python3 context-status/bin/test_context_statusline.py
+python3 context-status/scripts/test_ensure_statusline.py
 
 # branch-indicator tests
 python3 branch-indicator/scripts/test_branch_indicator.py
@@ -35,7 +36,7 @@ Delete any `__pycache__` the test run leaves behind. It is gitignored, but do no
 
 ### context-status: statusLine renderer
 
-- Registered in the user's `~/.claude/settings.json` as `statusLine.command`, which points at `bin/context-statusline.sh`. It is not wired through plugin install; the absolute path is what matters.
+- Registered in the user's `~/.claude/settings.json` as `statusLine.command`, pointing at `bin/context-statusline.sh`. Plugins cannot declare `statusLine`, so a SessionStart hook (`hooks/hooks.json` -> `scripts/ensure_statusline.py`) writes it: sets it when absent, repoints a stale context-status path, leaves any other `statusLine` alone. Invalid settings JSON raises.
 - Claude Code pipes a JSON payload on stdin. `context_statusline_render.py` reads only `model`, `workspace.current_dir` and `context_window`, and builds one line: model · dir · branch · context bar · chained output.
 - Every segment is best-effort. Missing data drops the segment rather than rendering a placeholder. Keep it that way when adding segments.
 - The branch is read from the repo's `HEAD` file, not by spawning `git`. This is deliberate: the status line runs on every refresh and must not spawn processes or block on a hung `git`. `_git_dir` handles normal repos, linked worktrees, submodules and bare repos.
