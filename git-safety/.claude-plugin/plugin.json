@@ -1,0 +1,6 @@
+{
+  "name": "git-safety",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Injects git safety rules at session start: no bare git reset --soft in shared repos."
+}

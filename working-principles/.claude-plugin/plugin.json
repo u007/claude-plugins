@@ -1,0 +1,6 @@
+{
+  "name": "working-principles",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Injects working principles at session start: fix suggestion protocol, docs as source of truth, surgical changes, planning rules."
+}

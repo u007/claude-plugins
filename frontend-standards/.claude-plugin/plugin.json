@@ -1,0 +1,6 @@
+{
+  "name": "frontend-standards",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Injects frontend standards at session start: use the present UI library, semantic HTML, micro-interaction care."
+}

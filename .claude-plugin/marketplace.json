@@ -1,7 +1,7 @@
 {
   "name": "personal-plugins",
   "owner": { "name": "james" },
-  "description": "Personal Claude Code plugins: context status line, inbound-content guardrail, OKF knowledge bundle workflow, communication style.",
+  "description": "Personal Claude Code plugins: context status line, inbound-content guardrail, OKF knowledge bundle workflow, communication style, working principles, code quality, git safety, frontend standards.",
   "plugins": [
     {
       "name": "context-status",
@@ -30,8 +30,32 @@
     {
       "name": "communication-style",
       "source": "./communication-style",
+      "version": "0.2.0",
+      "description": "Injects the ASD-STE100 based Agent Communication & Style Standard, with brevity rules, into every session at start."
+    },
+    {
+      "name": "working-principles",
+      "source": "./working-principles",
       "version": "0.1.0",
-      "description": "Injects the ASD-STE100 based Agent Communication & Style Standard into every session at start."
+      "description": "Injects working principles at session start: fix suggestion protocol, docs as source of truth, surgical changes, planning rules."
+    },
+    {
+      "name": "code-quality",
+      "source": "./code-quality",
+      "version": "0.1.0",
+      "description": "Injects code quality rules at session start: no fallbacks, error logging, no upsert, TODO tracking, test safety."
+    },
+    {
+      "name": "git-safety",
+      "source": "./git-safety",
+      "version": "0.1.0",
+      "description": "Injects git safety rules at session start: no bare git reset --soft in shared repos."
+    },
+    {
+      "name": "frontend-standards",
+      "source": "./frontend-standards",
+      "version": "0.1.0",
+      "description": "Injects frontend standards at session start: use the present UI library, semantic HTML, micro-interaction care."
     }
   ]
 }

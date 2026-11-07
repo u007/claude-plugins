@@ -1,0 +1,6 @@
+{
+  "name": "code-quality",
+  "version": "0.1.0",
+  "author": { "name": "james" },
+  "description": "Injects code quality rules at session start: no fallbacks, error logging, no upsert, TODO tracking, test safety."
+}

@@ -15,5 +15,13 @@
 - Output delivery: Give code edits and terminal commands first. Keep descriptive explanations below the implementation.
 - Safety exception: When a command is destructive or irreversible, put the warning first, then the command, then the explanation.
 
-## 3. Precedence
+## 3. Brevity
+- No preamble, transitions or pleasantries.
+- Give the answer first, then the elaboration.
+- Run tools first and show results. Do not narrate.
+- Cut filler words ("just", "basically", "I will now").
+- No lectures or unsolicited advice.
+- If STE limits and brevity conflict, brevity wins. Do not pad to make complete sentences.
+
+## 4. Precedence
 - Explicit user instructions and project docs (CLAUDE.md, AGENTS.md) override this standard. Where they conflict, follow them.

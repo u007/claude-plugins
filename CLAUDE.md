@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code plugin marketplace (`personal-plugins`) holding five plugins (`context-status`, `jev-guard`, `okf`, `branch-indicator`, `communication-style`). The marketplace manifest is `.claude-plugin/marketplace.json`; each plugin has its own `.claude-plugin/plugin.json`. Plugin `source` paths in the marketplace are relative (`./context-status`, `./jev-guard`).
+A Claude Code plugin marketplace (`personal-plugins`) holding nine plugins (`context-status`, `jev-guard`, `okf`, `branch-indicator`, `communication-style`, `working-principles`, `code-quality`, `git-safety`, `frontend-standards`). The marketplace manifest is `.claude-plugin/marketplace.json`; each plugin has its own `.claude-plugin/plugin.json`. Plugin `source` paths in the marketplace are relative (`./context-status`, `./jev-guard`).
 
 ## Commands
 
@@ -22,8 +22,8 @@ python3 context-status/bin/test_context_statusline.py ModelSegment.test_shows_mo
 # Validate marketplace + every plugin manifest (exit 1 on errors; add --strict for CI)
 claude plugin validate .
 
-# communication-style tests
-python3 communication-style/scripts/test_communication_style.py
+# rule-pack plugins (communication-style, working-principles, code-quality, git-safety, frontend-standards)
+python3 tests/test_rule_plugins.py
 
 # jev-guard tests (judge is stubbed, no network)
 python3 jev-guard/scripts/test_content_guard.py
@@ -61,9 +61,12 @@ Delete any `__pycache__` the test run leaves behind. It is gitignored, but do no
 - Output is `systemMessage` (shown to the user) plus `additionalContext` (for Claude). PostToolUse is silent unless the location changed since the last announcement, tracked per session in a temp file.
 - The git-dir/HEAD parsing duplicates `context-status`; plugins install independently so they cannot share code. Keep the two in step.
 
-### communication-style: SessionStart style injector
+### Rule-pack plugins: communication-style, working-principles, code-quality, git-safety, frontend-standards
 
-- `hooks/hooks.json` runs `scripts/communication_style.py` on SessionStart. It emits `additionalContext` from `standard.md` (ASD-STE100 limits plus software overrides, ported from ocode `internal/agent/prompt.go`). A missing `standard.md` raises; no fallback text.
+- Each holds one markdown file (`rules.md`; `standard.md` for communication-style, ASD-STE100 limits plus software overrides, ported from ocode `internal/agent/prompt.go`) and a SessionStart hook (matcher `startup|clear|compact`, so not `resume`) whose command is `cat "${CLAUDE_PLUGIN_ROOT}/<file>"`. Stdout becomes session context. A missing file makes the hook exit non-zero (Claude Code shows a non-blocking error; ocode ignores it). No script, so nothing is duplicated across plugins.
+- No Python hook script on purpose: ocode runs Claude Code SessionStart hooks with empty stdin and drops hook failures silently (ocode repo, `internal/plugins/sessionstart.go`: `cmd.Stdin = nil`, error returns `""`), so a script that reads the hook payload crashes there unnoticed. Keep these hooks stdin-independent.
+- Split from the user's former global `~/.claude/CLAUDE.md`. Users opt out of a theme by not installing its plugin.
+- Brevity and ASD-STE100 style live in `communication-style`; the other packs carry no style rules.
 
 ## Conventions specific to this repo
 
